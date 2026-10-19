@@ -2,12 +2,8 @@ package com.ucc.LPII.controller;
 
 import com.ucc.LPII.dto.ReservaRequestDTO;
 import com.ucc.LPII.dto.ReservaResponseDTO;
-import com.ucc.LPII.entity.Reserva;
-import com.ucc.LPII.mapper.UsuarioMapper;
-import com.ucc.LPII.repository.UsuarioRepository;
 import com.ucc.LPII.service.ReservaService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

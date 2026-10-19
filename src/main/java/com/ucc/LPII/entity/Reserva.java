@@ -1,7 +1,6 @@
 package com.ucc.LPII.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,8 +11,8 @@ import java.time.LocalDateTime;
 // lombok
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+
 public class Reserva {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

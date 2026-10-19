@@ -1,7 +1,6 @@
 package com.ucc.LPII.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,7 +10,6 @@ import lombok.Setter;
 // lombok
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 public class Usuario {
     @Id
