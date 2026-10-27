@@ -10,7 +10,8 @@ import com.ucc.LPII.exception.ZonaNotFoundException;
 import com.ucc.LPII.mapper.PrestadorMapper;
 import com.ucc.LPII.repository.PrestadorRepository;
 import com.ucc.LPII.repository.ZonaRepository;
-import com.ucc.LPII.repository.UbicacionRepository; // 1. Importación del repositorio de ubicación
+import com.ucc.LPII.repository.UbicacionRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,9 +25,8 @@ public class PrestadorService {
     private final PrestadorMapper prestadorMapper;
     private final PrestadorRepository prestadorRepository;
     private final ZonaRepository zonaRepository;
-    private final UbicacionRepository ubicacionRepository; // 2. Dependencia añadida
+    private final UbicacionRepository ubicacionRepository;
 
-    // 3. Constructor modificado para incluir la inyección de UbicacionRepository
     public PrestadorService(PrestadorMapper prestadorMapper, PrestadorRepository prestadorRepository, ZonaRepository zonaRepository, UbicacionRepository ubicacionRepository) {
         this.prestadorMapper = prestadorMapper;
         this.prestadorRepository = prestadorRepository;
@@ -46,12 +46,11 @@ public class PrestadorService {
         return prestadorMapper.entityToDTO(prestador);
     }
 
-    // 4. MÉTODO CORREGIDO: Guarda la ubicación antes de registrar el prestador
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public PrestadorResponseDTO agregarPrestador(PrestadorRequestDTO dto) {
         Zona zona = buscarZonaById(dto.zonaId());
         Prestador prestador = prestadorMapper.dtoToEntity(dto, zona);
         
-        // Persistimos la ubicación primero para generar su ID único obligatorio
         if (prestador.getUbicacion() != null) {
             Ubicacion ubicacionGuardada = ubicacionRepository.save(prestador.getUbicacion());
             prestador.setUbicacion(ubicacionGuardada);
@@ -61,6 +60,7 @@ public class PrestadorService {
         return prestadorMapper.entityToDTO(prestadorGuardado);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public PrestadorResponseDTO modificarPrestador(Long id, PrestadorRequestDTO dto) {
         Optional<Prestador> prestadorOpt = prestadorRepository.findById(id);
 
@@ -81,7 +81,6 @@ public class PrestadorService {
         Zona zona = buscarZonaById(dto.zonaId());
         prestadorModificado.setZona(zona);
 
-        // Actualizamos y sincronizamos la entidad de ubicación satélite vinculada
         if (dto.ubicacion() != null && prestadorModificado.getUbicacion() != null) {
             prestadorModificado.getUbicacion().setLatitud(dto.ubicacion().latitud());
             prestadorModificado.getUbicacion().setLongitud(dto.ubicacion().longitud());
@@ -93,7 +92,12 @@ public class PrestadorService {
         return prestadorMapper.entityToDTO(prestadorGuardado);
     }
 
+    // CORRECCIÓN: Valida que el prestador exista antes de intentar el borrado directo
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public void borrarUnPrestador(Long id) {
+        if (!prestadorRepository.existsById(id)) {
+            throw new PrestadorNotFoundException(id);
+        }
         prestadorRepository.deleteById(id);
     }
 

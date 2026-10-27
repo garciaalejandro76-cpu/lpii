@@ -1,4 +1,5 @@
 package com.ucc.LPII.service;
+
 import com.ucc.LPII.dto.LugarRequestDTO;
 import com.ucc.LPII.dto.LugarResponseDTO;
 import com.ucc.LPII.entity.Lugar;
@@ -9,7 +10,8 @@ import com.ucc.LPII.exception.ZonaNotFoundException;
 import com.ucc.LPII.mapper.LugarMapper;
 import com.ucc.LPII.repository.LugarRepository;
 import com.ucc.LPII.repository.ZonaRepository;
-import com.ucc.LPII.repository.UbicacionRepository; // 1. Importante importar el repositorio de ubicación
+import com.ucc.LPII.repository.UbicacionRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,9 +25,8 @@ public class LugarService {
     private final LugarMapper lugarMapper;
     private final LugarRepository lugarRepository;
     private final ZonaRepository zonaRepository;
-    private final UbicacionRepository ubicacionRepository; // 2. Añadir la dependencia
+    private final UbicacionRepository ubicacionRepository;
 
-    // 3. Modificar el constructor para inyectar UbicacionRepository
     public LugarService(LugarMapper lugarMapper, LugarRepository lugarRepository, ZonaRepository zonaRepository, UbicacionRepository ubicacionRepository) {
         this.lugarMapper = lugarMapper;
         this.lugarRepository = lugarRepository;
@@ -45,21 +46,21 @@ public class LugarService {
         return lugarMapper.entityToDTO(lugar);
     }
 
-    // 4. MÉTODO CORREGIDO: Salvando correctamente la relación 1 a 1 obligatoria
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public LugarResponseDTO agregarLugar(LugarRequestDTO dto) {
         Zona zona = buscarZonaById(dto.zonaId());
         Lugar lugar = lugarMapper.dtoToEntity(dto, zona);
         
-        // Si el DTO trae datos de ubicación, la persistimos primero para obtener su ID
         if (lugar.getUbicacion() != null) {
             Ubicacion ubicacionGuardada = ubicacionRepository.save(lugar.getUbicacion());
-            lugar.setUbicacion(ubicacionGuardada); // La asignamos con su ID correspondiente
+            lugar.setUbicacion(ubicacionGuardada);
         }
 
         Lugar lugarGuardado = lugarRepository.save(lugar);
         return lugarMapper.entityToDTO(lugarGuardado);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public LugarResponseDTO modificarLugar(Long id, LugarRequestDTO dto) {
         Optional<Lugar> lugarOpt = lugarRepository.findById(id);
 
@@ -78,7 +79,6 @@ public class LugarService {
             lugarModificado.getUbicacion().setLatitud(dto.ubicacion().latitud());
             lugarModificado.getUbicacion().setLongitud(dto.ubicacion().longitud());
             lugarModificado.getUbicacion().setReferencia(dto.ubicacion().referencia());
-            // Guardamos los cambios de la entidad satélite mapeada
             ubicacionRepository.save(lugarModificado.getUbicacion());
         }
 
@@ -86,7 +86,12 @@ public class LugarService {
         return lugarMapper.entityToDTO(lugarGuardado);
     }
 
+    // CORRECCIÓN: Valida la existencia del recurso antes de invocar la baja en persistencia
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public void borrarUnLugar(Long id) {
+        if (!lugarRepository.existsById(id)) {
+            throw new LugarNotFoundException(id);
+        }
         lugarRepository.deleteById(id);
     }
 

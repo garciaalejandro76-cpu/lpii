@@ -58,7 +58,11 @@ public class DestinoService {
         return destinoMapper.entityToDTO(destinoGuardado);
     }
 
+    // CORRECCIÓN: Valida que el destino exista antes de eliminar para poder responder 404
     public void borrarUnDestino(Long id) {
+        if (!destinoRepository.existsById(id)) {
+            throw new DestinoNotFoundException(id);
+        }
         destinoRepository.deleteById(id);
     }
 }

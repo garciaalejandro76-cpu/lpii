@@ -9,6 +9,8 @@ import com.ucc.LPII.exception.ZonaNotFoundException;
 import com.ucc.LPII.mapper.ZonaMapper;
 import com.ucc.LPII.repository.DestinoRepository;
 import com.ucc.LPII.repository.ZonaRepository;
+import com.ucc.LPII.repository.PrestadorRepository; // Nueva inyección indispensable
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +24,13 @@ public class ZonaService {
     private final ZonaMapper zonaMapper;
     private final ZonaRepository zonaRepository;
     private final DestinoRepository destinoRepository;
+    private final PrestadorRepository prestadorRepository; // Dependencia agregada para resolver la observación
 
-    public ZonaService(ZonaMapper zonaMapper, ZonaRepository zonaRepository, DestinoRepository destinoRepository) {
+    public ZonaService(ZonaMapper zonaMapper, ZonaRepository zonaRepository, DestinoRepository destinoRepository, PrestadorRepository prestadorRepository) {
         this.zonaMapper = zonaMapper;
         this.zonaRepository = zonaRepository;
         this.destinoRepository = destinoRepository;
+        this.prestadorRepository = prestadorRepository;
     }
 
     public List<ZonaResponseDTO> obtenerTodasLasZonas() {
@@ -41,6 +45,7 @@ public class ZonaService {
         return zonaMapper.entityToResponseDTO(zona);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ZonaResponseDTO agregarZona(ZonaRequestDTO dto) {
         Destino destino = buscarDestinoById(dto.destinoId());
         Zona zona = zonaMapper.dtoToEntity(dto, destino);
@@ -48,6 +53,7 @@ public class ZonaService {
         return zonaMapper.entityToResponseDTO(zonaGuardada);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ZonaResponseDTO modificarZona(Long id, ZonaRequestDTO dto) {
         Optional<Zona> zonaOpt = zonaRepository.findById(id);
 
@@ -66,12 +72,24 @@ public class ZonaService {
         return zonaMapper.entityToResponseDTO(zonaGuardada);
     }
 
+    // CORRECCIÓN: Valida existencia y dependencias activas para prevenir errores de Constraint en MySQL
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public void borrarUnaZona(Long id) {
+        if (!zonaRepository.existsById(id)) {
+            throw new ZonaNotFoundException(id);
+        }
+
+        // Si la zona posee relaciones activas en la tabla prestadores, lanzamos una excepción semántica
+        boolean tienePrestadores = prestadorRepository.existsByZona_Id(id);
+        if (tienePrestadores) {
+            throw new IllegalArgumentException("No es posible eliminar la zona seleccionada debido a que posee prestadores turísticos activos vinculados.");
+        }
+
         zonaRepository.deleteById(id);
     }
 
     public List<ZonaResponseDTO> obtenerZonasByDestino(Long idDestino) {
-        buscarDestinoById(idDestino); // Lanza excepción si el destino no existe
+        buscarDestinoById(idDestino);
         return zonaRepository.findByDestino_Id(idDestino)
                 .stream()
                 .map(zonaMapper::entityToResponseDTO)

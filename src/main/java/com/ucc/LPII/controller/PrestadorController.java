@@ -12,8 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/prestadores")
-// http://localhost:8080/api/prestadores
-
 public class PrestadorController {
 
     private final PrestadorService prestadorService;
@@ -22,42 +20,31 @@ public class PrestadorController {
         this.prestadorService = prestadorService;
     }
 
-    //get, post, put, delete
-
-    //2xx: salio bien por ej 200, 201
-    //4xx: el cliente pidio algo mal ej: 400, 404
-    //5xx: error del servidor ej: 500, 503
-    
-    // obtener todos
     @GetMapping()
     public ResponseEntity<List<PrestadorResponseDTO>> obtenerTodosLosPrestadores() {
         return ResponseEntity.ok(prestadorService.obtenerTodosLosPrestadores());
     }
 
-    // obtener uno por id
     @GetMapping("/{id}")
     public ResponseEntity<PrestadorResponseDTO> obtenerUnPrestador(@PathVariable("id") Long id) {
         return ResponseEntity.ok(prestadorService.obtenerUnPrestador(id));
     }
 
-    // obtener prestadores por idZona
     @GetMapping("/zona/{idZona}")
-    public ResponseEntity<List<PrestadorResponseDTO>> obtenerPrestadoresByZona(
-            @PathVariable("idZona") Long idZona) {
+    public ResponseEntity<List<PrestadorResponseDTO>> obtenerPrestadoresByZona(@PathVariable("idZona") Long idZona) {
         List<PrestadorResponseDTO> prestadores = prestadorService.obtenerPrestadoresByZona(idZona);
         return ResponseEntity.ok(prestadores);
     }
 
-    // agregar un prestador
     @PostMapping()
     public ResponseEntity<PrestadorResponseDTO> agregarPrestador(@Valid @RequestBody PrestadorRequestDTO dto) {
         PrestadorResponseDTO creado = prestadorService.agregarPrestador(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
-    // modificar un prestador
+    // CORRECCIÓN: Se añade @Valid para validar el DTO de entrada en la modificación
     @PutMapping("/{id}")
-    public ResponseEntity<PrestadorResponseDTO> modificarPrestador(@PathVariable("id") Long id, @RequestBody PrestadorRequestDTO dto) {
+    public ResponseEntity<PrestadorResponseDTO> modificarPrestador(@PathVariable("id") Long id, @Valid @RequestBody PrestadorRequestDTO dto) {
         PrestadorResponseDTO modificado = prestadorService.modificarPrestador(id, dto);
         if (modificado == null) {
             return ResponseEntity.notFound().build();
@@ -65,7 +52,6 @@ public class PrestadorController {
         return ResponseEntity.ok(modificado);
     }
 
-    // eliminar un prestador
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarPrestador(@PathVariable("id") Long id) {
         prestadorService.borrarUnPrestador(id);

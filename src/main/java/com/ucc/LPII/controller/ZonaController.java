@@ -30,7 +30,6 @@ public class ZonaController {
         return ResponseEntity.ok(zonaService.obtenerUnaZona(id));
     }
 
-    // Obtener zonas pertenecientes a un destino específico (Llave foránea destino_id)
     @GetMapping("/destino/{idDestino}")
     public ResponseEntity<List<ZonaResponseDTO>> obtenerZonasByDestino(@PathVariable("idDestino") Long idDestino) {
         List<ZonaResponseDTO> zonas = zonaService.obtenerZonasByDestino(idDestino);
@@ -43,8 +42,9 @@ public class ZonaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
+    // CORRECCIÓN: Se añade @Valid para validar el DTO de entrada en la modificación
     @PutMapping("/{id}")
-    public ResponseEntity<ZonaResponseDTO> modificarZona(@PathVariable("id") Long id, @RequestBody ZonaRequestDTO dto) {
+    public ResponseEntity<ZonaResponseDTO> modificarZona(@PathVariable("id") Long id, @Valid @RequestBody ZonaRequestDTO dto) {
         ZonaResponseDTO modificada = zonaService.modificarZona(id, dto);
         if (modificada == null) {
             return ResponseEntity.notFound().build();

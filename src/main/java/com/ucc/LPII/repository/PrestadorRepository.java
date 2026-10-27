@@ -8,6 +8,11 @@ import java.util.List;
 
 @Repository
 public interface PrestadorRepository extends JpaRepository<Prestador, Long> {
-    // Select * from prestadores where zona_id = {idZona}
+    
+    // Consulta existente: Recupera el listado completo de prestadores por Zona
     List<Prestador> findByZona_Id(Long idZona);
+
+    // NUEVA ADICIÓN OBLIGATORIA: Verifica la existencia de dependencias activas (retorna true o false)
+    // Este método es el que utiliza ZonaService.borrarUnaZona(id) para evitar el error de clave foránea.
+    boolean existsByZona_Id(Long idZona);
 }

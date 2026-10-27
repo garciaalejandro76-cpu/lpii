@@ -36,8 +36,9 @@ public class DestinoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
+    // CORRECCIÓN: Se añade @Valid para validar el DTO de entrada en la modificación
     @PutMapping("/{id}")
-    public ResponseEntity<DestinoResponseDTO> modificarDestino(@PathVariable("id") Long id, @RequestBody DestinoRequestDTO dto) {
+    public ResponseEntity<DestinoResponseDTO> modificarDestino(@PathVariable("id") Long id, @Valid @RequestBody DestinoRequestDTO dto) {
         DestinoResponseDTO modificado = destinoService.modificarDestino(id, dto);
         if (modificado == null) {
             return ResponseEntity.notFound().build();

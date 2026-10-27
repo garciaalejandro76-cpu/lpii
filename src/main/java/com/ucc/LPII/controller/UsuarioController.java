@@ -1,49 +1,35 @@
 package com.ucc.LPII.controller;
 
-import com.ucc.LPII.dto.UsuarioDTO;
-import com.ucc.LPII.entity.Usuario;
-import com.ucc.LPII.mapper.UsuarioMapper;
-import com.ucc.LPII.repository.UsuarioRepository;
+import com.ucc.LPII.dto.UsuarioRequestDTO;
+import com.ucc.LPII.dto.UsuarioResponseDTO;
 import com.ucc.LPII.service.UsuarioService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuarios")
-// si quiero consultar desde el front
-// http://localhost:8080/api/usuarios
 public class UsuarioController {
-    @Autowired // inyectar dependencias
-    private UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
 
-    @Autowired
-    private UsuarioMapper usuarioMapper;
-
-    //  definir get, post, put, delete
-    // http://localhost:8080/api/usuarios/all
-    @GetMapping("/all")
-    public List<UsuarioDTO> obtenerTodosLosUsuarios() {
-        //ej; sql; SELECT * FROM usuarios;
-        return usuarioService.obtenerTodosLosUsuarios();
+    public UsuarioController(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
     }
 
-    @PostMapping("/add")
-    public UsuarioDTO agregarUsuario(@RequestBody UsuarioDTO usuarioDTO) {
-        Usuario usuario = new Usuario();
-        usuario.setNombre(usuarioDTO.nombre());
-        usuario.setCorreo(usuarioDTO.correo());
-        usuario.setEdad(usuarioDTO.edad());
-
-        Usuario usuarioGuardado = usuarioRepository.save(usuario);
-        return usuarioMapper.entityToDTO(usuarioGuardado);
+    // Endpoint público para el registro de nuevos usuarios
+    @PostMapping("/registro")
+    public ResponseEntity<UsuarioResponseDTO> registrar(@Valid @RequestBody UsuarioRequestDTO dto) {
+        UsuarioResponseDTO response = usuarioService.registrarUsuario(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response); // HTTP 201 Created
     }
 
-    // put / delete
+    // Agrega este método dentro de tu UsuarioController existente:
+    @GetMapping
+    public org.springframework.http.ResponseEntity<List<UsuarioResponseDTO>> listarUsuarios() {
+        List<UsuarioResponseDTO> usuarios = usuarioService.obtenerTodosLosUsuarios();
+        return org.springframework.http.ResponseEntity.ok(usuarios); // HTTP 200 OK con la lista
+    }
 }
-
-
